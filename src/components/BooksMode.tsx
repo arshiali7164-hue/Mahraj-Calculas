@@ -1,77 +1,20 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Search, ExternalLink, BookText, Globe } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-
-type BookEntry = {
-  id: string;
-  classLevel: string;
-  subject: string;
-  name: string;
-  url: string; // The link to actual PDF or digital version
-};
+import { useState } from 'react';
+import { Search, ExternalLink, Globe, BookOpen } from 'lucide-react';
+import { motion } from 'motion/react';
 
 type OpenLibraryDoc = {
   key: string;
   title: string;
   author_name?: string[];
   first_publish_year?: number;
+  cover_i?: number;
 };
 
-const booksData: BookEntry[] = [
-  // Class 8
-  { id: '8_sci', classLevel: 'Class 8', subject: 'Science', name: 'Science Textbook for Class 8', url: 'https://ncert.nic.in/textbook.php?hesc1=0-13' },
-  { id: '8_math', classLevel: 'Class 8', subject: 'Maths', name: 'Mathematics for Class 8', url: 'https://ncert.nic.in/textbook.php?hema1=0-13' },
-
-  // Class 9
-  { id: '9_sci', classLevel: 'Class 9', subject: 'Science', name: 'Science Textbook for Class 9', url: 'https://ncert.nic.in/textbook.php?iesc1=0-12' },
-  { id: '9_math', classLevel: 'Class 9', subject: 'Maths', name: 'Mathematics for Class 9', url: 'https://ncert.nic.in/textbook.php?iema1=0-12' },
-
-  // Class 10
-  { id: '10_sci', classLevel: 'Class 10', subject: 'Science', name: 'Science Textbook for Class 10', url: 'https://ncert.nic.in/textbook.php?jesc1=0-13' },
-  { id: '10_math', classLevel: 'Class 10', subject: 'Maths', name: 'Mathematics for Class 10', url: 'https://ncert.nic.in/textbook.php?jema1=0-14' },
-
-  // Class 11 PCM
-  { id: '11_phy_1', classLevel: 'Class 11', subject: 'Physics', name: 'Physics Part I', url: 'https://ncert.nic.in/textbook.php?keph1=0-8' },
-  { id: '11_phy_2', classLevel: 'Class 11', subject: 'Physics', name: 'Physics Part II', url: 'https://ncert.nic.in/textbook.php?keph2=0-6' },
-  { id: '11_chem_1', classLevel: 'Class 11', subject: 'Chemistry', name: 'Chemistry Part I', url: 'https://ncert.nic.in/textbook.php?kech1=0-7' },
-  { id: '11_chem_2', classLevel: 'Class 11', subject: 'Chemistry', name: 'Chemistry Part II', url: 'https://ncert.nic.in/textbook.php?kech2=0-2' },
-  { id: '11_math', classLevel: 'Class 11', subject: 'Maths', name: 'Mathematics for Class 11', url: 'https://ncert.nic.in/textbook.php?kema1=0-14' },
-
-  // Class 12 PCM
-  { id: '12_phy_1', classLevel: 'Class 12', subject: 'Physics', name: 'Physics Part I', url: 'https://ncert.nic.in/textbook.php?leph1=0-8' },
-  { id: '12_phy_2', classLevel: 'Class 12', subject: 'Physics', name: 'Physics Part II', url: 'https://ncert.nic.in/textbook.php?leph2=0-6' },
-  { id: '12_chem_1', classLevel: 'Class 12', subject: 'Chemistry', name: 'Chemistry Part I', url: 'https://ncert.nic.in/textbook.php?lech1=0-5' },
-  { id: '12_chem_2', classLevel: 'Class 12', subject: 'Chemistry', name: 'Chemistry Part II', url: 'https://ncert.nic.in/textbook.php?lech2=0-5' },
-  { id: '12_math_1', classLevel: 'Class 12', subject: 'Maths', name: 'Mathematics Part I', url: 'https://ncert.nic.in/textbook.php?lema1=0-6' },
-  { id: '12_math_2', classLevel: 'Class 12', subject: 'Maths', name: 'Mathematics Part II', url: 'https://ncert.nic.in/textbook.php?lema2=0-7' },
-];
-
 export function BooksMode() {
-  const [viewMode, setViewMode] = useState<'local' | 'internet'>('local');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeClass, setActiveClass] = useState<'All' | 'Class 8' | 'Class 9' | 'Class 10' | 'Class 11' | 'Class 12'>('All');
-  
-  // Internet Search State
   const [internetQuery, setInternetQuery] = useState('');
   const [internetResults, setInternetResults] = useState<OpenLibraryDoc[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-
-  const filteredBooks = useMemo(() => {
-    let result = booksData;
-    if (activeClass !== 'All') {
-      result = result.filter(b => b.classLevel === activeClass);
-    }
-    if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      result = result.filter(b => 
-        b.name.toLowerCase().includes(lower) || 
-        b.subject.toLowerCase().includes(lower) ||
-        b.classLevel.toLowerCase().includes(lower)
-      );
-    }
-    return result;
-  }, [searchTerm, activeClass]);
 
   const handleInternetSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -93,178 +36,113 @@ export function BooksMode() {
 
   return (
     <div className="flex-1 flex flex-col p-4 space-y-4 relative z-10 w-full h-full font-sans text-white overflow-hidden">
-      {/* View Mode Toggle */}
-      <div className="flex bg-zinc-900/80 rounded-xl p-1 shrink-0 border border-zinc-800">
-        <button
-          onClick={() => setViewMode('local')}
-          className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'local' ? 'bg-zinc-800 text-rose-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}
-        >
-          <BookText size={16} /> NCERT PDFs
-        </button>
-        <button
-          onClick={() => setViewMode('internet')}
-          className={`flex-1 flex justify-center items-center gap-2 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'internet' ? 'bg-zinc-800 text-cyan-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}
-        >
-          <Globe size={16} /> World Library
-        </button>
+      {/* Header */}
+      <div className="flex flex-col gap-1 items-center justify-center pt-2 pb-4 shrink-0">
+        <div className="h-10 w-10 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 flex items-center justify-center mb-1 text-cyan-400">
+           <Globe size={20} />
+        </div>
+        <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-sky-300 bg-clip-text text-transparent">World Library</h2>
+        <p className="text-xs text-zinc-400">Search millions of books globally</p>
       </div>
 
-      {viewMode === 'local' ? (
-        <>
-          {/* Search Bar */}
-          <div className="relative shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search local books, subjects, classes..." 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-rose-500/50 focus:ring-1 focus:ring-rose-500/50 transition-all placeholder:text-zinc-600"
-            />
-          </div>
+      {/* Internet Search */}
+      <form onSubmit={handleInternetSearch} className="relative shrink-0 flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-500" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search titles, authors, or topics..." 
+            value={internetQuery}
+            onChange={e => setInternetQuery(e.target.value)}
+            className="w-full bg-zinc-900/90 border border-zinc-800 rounded-2xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder:text-zinc-600 shadow-inner block"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isSearching || !internetQuery.trim()}
+          className="bg-cyan-500 hover:bg-cyan-400 text-cyan-950 px-5 rounded-2xl font-bold active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] flex items-center gap-2"
+        >
+          {isSearching ? 'Searching...' : 'Search'}
+        </button>
+      </form>
 
-          {/* Tabs */}
-          <div className="flex space-x-2 overflow-x-auto custom-scrollbar shrink-0 pb-1">
-            {(['All', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveClass(tab)}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all whitespace-nowrap ${
-                  activeClass === tab 
-                    ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]' 
-                    : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
-                }`}
+      {/* Internet Results List */}
+      <div className="flex-1 overflow-y-auto pr-1 pb-16 space-y-4 custom-scrollbar">
+        {isSearching ? (
+          <div className="flex flex-col items-center justify-center h-full text-cyan-500 gap-4 mt-20">
+            <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+            <p className="animate-pulse text-sm font-medium">Delving into the archives...</p>
+          </div>
+        ) : searchError ? (
+          <div className="flex flex-col items-center justify-center h-full text-red-400 mt-20">
+            <p className="bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20">{searchError}</p>
+          </div>
+        ) : internetResults.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-zinc-500 mt-20">
+            <BookOpen size={48} className="mb-4 opacity-20" />
+            <p className="text-zinc-400">Discover your next favorite read.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {internetResults.map((book, index) => (
+              <motion.div 
+                key={book.key + index}
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
+                className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-3 hover:border-cyan-500/40 hover:bg-zinc-800/60 transition-all group flex items-stretch gap-3 shadow-sm hover:shadow-[0_0_15px_rgba(6,182,212,0.1)]"
               >
-                {tab}
-              </button>
-            ))}
-          </div>
+                {/* Book Cover */}
+                <div className="w-16 h-24 shrink-0 bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700/50 flex items-center justify-center relative shadow-sm">
+                  {book.cover_i ? (
+                    <img 
+                      src={`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`} 
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <BookOpen size={24} className="text-zinc-600" />
+                  )}
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg pointer-events-none"></div>
+                </div>
 
-          {/* Books List */}
-          <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
-            {filteredBooks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
-                <BookText size={48} className="mb-4 opacity-20" />
-                <p>No books found.</p>
-              </div>
-            ) : (
-              filteredBooks.map((book, index) => (
-                <motion.div 
-                  key={book.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 hover:border-rose-500/30 transition-colors group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-300">
-                        {book.classLevel}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        book.subject === 'Maths' ? 'bg-indigo-500/20 text-indigo-300' :
-                        book.subject === 'Science' ? 'bg-emerald-500/20 text-emerald-300' :
-                        book.subject === 'Physics' ? 'bg-amber-500/20 text-amber-300' :
-                        book.subject === 'Chemistry' ? 'bg-cyan-500/20 text-cyan-300' :
-                        'bg-zinc-700 text-zinc-300'
-                      }`}>
-                        {book.subject}
-                      </span>
-                    </div>
-                    <h3 className="font-semibold text-rose-100/90 text-sm">{book.name}</h3>
-                  </div>
-                  <a 
-                    href={book.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="shrink-0 flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl px-4 py-2 text-sm font-medium transition-colors cursor-pointer"
-                  >
-                    <span>Read PDF</span>
-                    <ExternalLink size={16} />
-                  </a>
-                </motion.div>
-              ))
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Internet Search */}
-          <form onSubmit={handleInternetSearch} className="relative shrink-0 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search world library..." 
-                value={internetQuery}
-                onChange={e => setInternetQuery(e.target.value)}
-                className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all placeholder:text-zinc-600"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isSearching}
-              className="bg-cyan-500 text-black px-4 rounded-2xl font-bold active:scale-95 transition-transform disabled:opacity-50"
-            >
-              Search
-            </button>
-          </form>
-
-          {/* Internet Results List */}
-          <div className="flex-1 overflow-y-auto pr-1 pb-4 space-y-3 custom-scrollbar">
-            {isSearching ? (
-              <div className="flex flex-col items-center justify-center h-48 text-cyan-500">
-                <Globe size={48} className="mb-4 opacity-50 animate-pulse" />
-                <p className="animate-pulse">Searching the internet...</p>
-              </div>
-            ) : searchError ? (
-              <div className="flex flex-col items-center justify-center h-48 text-red-400">
-                <p>{searchError}</p>
-              </div>
-            ) : internetResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-zinc-500">
-                <Globe size={48} className="mb-4 opacity-20" />
-                <p>Enter a query to search the World Library.</p>
-              </div>
-            ) : (
-              internetResults.map((book, index) => (
-                <motion.div 
-                  key={book.key}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-4 hover:border-cyan-500/30 transition-colors group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-cyan-100/90 text-sm line-clamp-2">{book.title}</h3>
+                <div className="flex-1 flex flex-col justify-between py-0.5">
+                  <div>
+                    <h3 className="font-bold text-cyan-50 text-sm leading-snug line-clamp-2 md:group-hover:text-cyan-300 transition-colors">{book.title}</h3>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       {book.author_name?.[0] && (
-                        <span className="text-zinc-400 text-xs">
-                          by {book.author_name[0]}
-                        </span>
-                      )}
-                      {book.first_publish_year && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-400">
-                          {book.first_publish_year}
+                        <span className="text-zinc-400 text-xs truncate max-w-[150px]">
+                          {book.author_name[0]}
                         </span>
                       )}
                     </div>
                   </div>
-                  <a 
-                    href={`https://openlibrary.org${book.key}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="shrink-0 flex items-center justify-center gap-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-xl px-4 py-2 text-sm font-medium transition-colors cursor-pointer"
-                  >
-                    <span>View Online</span>
-                    <ExternalLink size={16} />
-                  </a>
-                </motion.div>
-              ))
-            )}
+                  
+                  <div className="flex items-center justify-between mt-3">
+                    {book.first_publish_year ? (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-zinc-800 border border-zinc-700/50 text-zinc-400">
+                        {book.first_publish_year}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                    <a 
+                      href={`https://openlibrary.org${book.key}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500 text-cyan-400 hover:text-cyan-950 border border-cyan-500/30 font-bold rounded-lg px-3 py-1.5 text-xs transition-all cursor-pointer shadow-sm active:scale-95"
+                    >
+                      <ExternalLink size={14} />
+                      Open
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }

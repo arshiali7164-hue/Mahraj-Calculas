@@ -5,13 +5,15 @@
 
 import { useState, ReactNode, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calculator, Atom, FlaskConical, CircleDollarSign, LibraryBig, BookOpen, Download } from 'lucide-react';
+import { Calculator, Atom, FlaskConical, CircleDollarSign, LibraryBig, BookOpen, Download, User as UserIcon, LogOut, Trash2 } from 'lucide-react';
 import { MathMode } from './components/MathMode';
 import { PhysicsMode } from './components/PhysicsMode';
 import { ChemistryMode } from './components/ChemistryMode';
 import { CurrencyMode } from './components/CurrencyMode';
 import { FormulaLibraryMode } from './components/FormulaLibraryMode';
 import { BooksMode } from './components/BooksMode';
+import { useAuth } from './FirebaseProvider';
+import { clearAllCalculations } from './firebase';
 
 type Mode = 'math' | 'physics' | 'chemistry' | 'currency' | 'formulas' | 'books';
 
@@ -20,6 +22,8 @@ export default function App() {
   const [hasStarted, setHasStarted] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const { user, signIn, logOut, loading } = useAuth();
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -51,6 +55,16 @@ export default function App() {
       alert('To install on iOS: Tap the Share button at the bottom of the screen, then select "Add to Home Screen".');
     } else {
       alert('App installation is not supported by your browser or is already installed.');
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (user) {
+      if (window.confirm("Are you sure you want to clear all your saved calculations?")) {
+        setIsClearing(true);
+        await clearAllCalculations(user.uid);
+        setIsClearing(false);
+      }
     }
   };
 
@@ -99,11 +113,11 @@ export default function App() {
             >
               <h1 
                 className="text-4xl sm:text-5xl font-extrabold tracking-tight glitch drop-shadow-lg mb-2 text-white" 
-                data-text="Mahraj Calculas."
+                data-text="Mahraj Calculus."
               >
-                Mahraj Calculas.
+                Mahraj Calculus.
               </h1>
-              <p className="text-zinc-400 mb-12 max-w-[250px] mx-auto text-sm leading-relaxed">
+              <p className="text-zinc-400 mb-1 max-w-[250px] mx-auto text-sm leading-relaxed">
                 Advanced scientific calculator with physics, chemistry, and forex features.
               </p>
             </motion.div>
@@ -147,7 +161,8 @@ export default function App() {
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-20"></div>
           
           {/* Top Bar Label */}
-          <div className="pt-4 pb-2 px-6 flex justify-center items-center z-20 relative">
+          <div className="pt-4 pb-2 px-6 flex justify-between items-center z-20 relative">
+             <div className="w-8"></div> {/* Spacer for balance */}
              <div className="px-4 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-bold tracking-widest text-zinc-400 uppercase">
                {mode === 'math' && <span className="text-lime-400">MATH CALC</span>}
                {mode === 'physics' && <span className="text-lime-400">PHYSICS</span>}
@@ -156,6 +171,36 @@ export default function App() {
                {mode === 'formulas' && <span className="text-indigo-400">FORMULA LIB</span>}
                {mode === 'books' && <span className="text-rose-400">BOOKS</span>}
              </div>
+             
+             {!loading && (
+               user ? (
+                 <div className="flex items-center gap-2">
+                   <button 
+                    onClick={handleClearHistory}
+                    disabled={isClearing}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors border ${isClearing ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-zinc-800/80 text-zinc-400 hover:text-red-400 border-zinc-700/50 hover:border-red-500/30 hover:bg-red-500/10'}`}
+                    title="Clear history"
+                   >
+                     {isClearing ? <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div> : <Trash2 size={16} />}
+                   </button>
+                   <button 
+                    onClick={logOut}
+                    className="w-8 h-8 rounded-full bg-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-white transition-colors border border-zinc-700/50"
+                    title="Sign out"
+                   >
+                     <LogOut size={16} />
+                   </button>
+                 </div>
+               ) : (
+                 <button 
+                  onClick={signIn}
+                  className="w-8 h-8 rounded-full bg-lime-500/10 flex items-center justify-center text-lime-400 hover:bg-lime-500/20 transition-colors border border-lime-500/30"
+                  title="Sign in to save history"
+                 >
+                   <UserIcon size={16} />
+                 </button>
+               )
+             )}
           </div>
 
           {/* Dynamic Content Area */}

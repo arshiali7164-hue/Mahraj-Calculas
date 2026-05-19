@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Information about a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Auth UID"
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["userId", "createdAt"]
+    },
+    "Calculation": {
+      "title": "Calculation History",
+      "description": "A calculation performed by the user.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Calculator mode (e.g. math, physics)"
+        },
+        "expression": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        }
+      },
+      "required": ["mode", "expression", "result", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "User profiles"
+    },
+    "/users/{userId}/calculations/{calculationId}": {
+      "schema": {
+        "$ref": "#/entities/Calculation"
+      },
+      "description": "Calculations made by the user."
+    }
+  }
+}

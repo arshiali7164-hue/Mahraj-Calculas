@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../FirebaseProvider';
+import { saveCalculation } from '../firebase';
 
 export function MathMode() {
   const [current, setCurrent] = useState('0');
@@ -7,6 +9,7 @@ export function MathMode() {
   const [waitingForNewValue, setWaitingForNewValue] = useState(false);
   const [isRad, setIsRad] = useState(false);
   const [isSciNotation, setIsSciNotation] = useState(false);
+  const { user } = useAuth();
 
   const formatForDisplay = (numStr: string, isActiveInput: boolean = false) => {
     if (numStr === 'NaN' || numStr === 'Infinity' || numStr === '-Infinity') return 'Error';
@@ -109,6 +112,9 @@ export function MathMode() {
     if (operator && previous) {
       const result = calculate(parseFloat(previous), parseFloat(current), operator);
       setCurrent(String(result));
+      if (user) {
+        saveCalculation(user.uid, 'Math', `${previous} ${operator} ${current}`, String(result));
+      }
       setPrevious(null);
       setOperator(null);
       setWaitingForNewValue(true);
@@ -147,8 +153,52 @@ export function MathMode() {
     
     result = Math.round(result * 1e12) / 1e12;
     setCurrent(String(result));
+    if (user) {
+      saveCalculation(user.uid, 'Math:Scientific', `${func}(${val})`, String(result));
+    }
     setWaitingForNewValue(true);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if focus is on an input or textarea
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      if (e.key >= '0' && e.key <= '9') {
+        handleNum(e.key);
+      } else if (e.key === '.') {
+        handleDot();
+      } else if (e.key === 'Backspace') {
+        setCurrent(prev => {
+          if (prev === 'Error') return '0';
+          const val = prev.slice(0, -1);
+          return (val.length > 0 && val !== '-') ? val : '0';
+        });
+        if (waitingForNewValue) setWaitingForNewValue(false);
+      } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+        handleClear();
+      } else if (e.key === '+' || e.key === '-') {
+        handleOperator(e.key);
+      } else if (e.key === '*' || e.key === 'x') {
+        handleOperator('×');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        handleOperator('÷');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        handleEquals();
+      } else if (e.key === '%') {
+        handlePercent();
+      } else if (e.key === '^') {
+        handleOperator('^');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [current, previous, operator, waitingForNewValue]);
 
   const displayValue = formatForDisplay(current, !waitingForNewValue);
 
