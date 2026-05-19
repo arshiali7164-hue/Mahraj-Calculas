@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Delete } from 'lucide-react';
 import { useAuth } from '../FirebaseProvider';
 import { saveCalculation } from '../firebase';
 
@@ -58,14 +59,26 @@ export function MathMode() {
   };
 
   const handleClear = () => {
-    if (current === 'Error' || (current === '0' && previous === null)) {
+    setCurrent('0');
+  };
+
+  const handleAllClear = () => {
+    setCurrent('0');
+    setPrevious(null);
+    setOperator(null);
+    setWaitingForNewValue(false);
+  };
+
+  const handleBackspace = () => {
+    if (waitingForNewValue || current === 'Error') {
       setCurrent('0');
-      setPrevious(null);
-      setOperator(null);
       setWaitingForNewValue(false);
-    } else {
-      setCurrent('0');
+      return;
     }
+    setCurrent(prev => {
+      const val = prev.slice(0, -1);
+      return (val.length > 0 && val !== '-') ? val : '0';
+    });
   };
 
   const handleToggleSign = () => {
@@ -171,12 +184,7 @@ export function MathMode() {
       } else if (e.key === '.') {
         handleDot();
       } else if (e.key === 'Backspace') {
-        setCurrent(prev => {
-          if (prev === 'Error') return '0';
-          const val = prev.slice(0, -1);
-          return (val.length > 0 && val !== '-') ? val : '0';
-        });
-        if (waitingForNewValue) setWaitingForNewValue(false);
+        handleBackspace();
       } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
         handleClear();
       } else if (e.key === '+' || e.key === '-') {
@@ -249,13 +257,13 @@ export function MathMode() {
         <button className={btnSci} onClick={() => handleScientific('log')}>log</button>
         <button className={btnSci} onClick={() => handleScientific('ln')}>ln</button>
         <button className={btnSci} onClick={() => handleScientific('π')}>π</button>
-        <button className={operator === '^' && waitingForNewValue ? btnOpActive : btnSci} onClick={() => handleOperator('^')}>xʸ</button>
-
-        {/* Standard Calc */}
-        <button className={btnFn} onClick={handleClear}>
-          {current === '0' && previous === null ? 'AC' : 'C'}
+        <button className={`${btnSci} bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/30`} onClick={handleBackspace} title="Backspace (Clear last number)">
+          <Delete size={18} />
         </button>
-        <button className={btnFn} onClick={handleToggleSign}>+/-</button>
+
+        {/* Standard Calc Control Row */}
+        <button className={btnFn} onClick={handleAllClear} title="All Clear">AC</button>
+        <button className={btnFn} onClick={handleClear} title="Clear Entry">C</button>
         <button className={btnFn} onClick={handlePercent}>%</button>
         <button className={operator === '÷' && waitingForNewValue ? btnOpActive : btnOp} onClick={() => handleOperator('÷')}>÷</button>
 
@@ -274,11 +282,11 @@ export function MathMode() {
         <button className={btnNu} onClick={() => handleNum('3')}>3</button>
         <button className={operator === '+' && waitingForNewValue ? btnOpActive : btnOp} onClick={() => handleOperator('+')}>+</button>
 
-        <button className={`${btnNu} col-span-2 justify-start pl-6`} onClick={() => handleNum('0')}>
-          0
-        </button>
+        <button className={btnFn} onClick={handleToggleSign}>+/-</button>
+        <button className={btnNu} onClick={() => handleNum('0')}>0</button>
         <button className={btnNu} onClick={handleDot}>.</button>
         <button className={btnOp} onClick={handleEquals}>=</button>
+
       </div>
     </div>
   );

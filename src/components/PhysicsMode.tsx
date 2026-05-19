@@ -262,6 +262,15 @@ export function PhysicsMode() {
           </div>
 
           <div className="space-y-4 flex-1">
+            <div className="flex justify-between items-center px-1">
+              <span className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Variable Inputs</span>
+              <button 
+                onClick={() => setInputs({})}
+                className="text-[10px] bg-zinc-800 hover:bg-red-500/10 text-zinc-500 hover:text-red-400 px-2 py-1 rounded transition-colors border border-zinc-700/50"
+              >
+                Clear All
+              </button>
+            </div>
             {selectedFormula.variables.map(v => (
               <div key={v.key}>
                 <label className="block text-sm text-zinc-400 mb-1">{v.label} ({v.unit})</label>
